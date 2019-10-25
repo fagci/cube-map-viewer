@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CubeMapRenderer</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden; /* TODO: remove this hack */
+      cursor: move;
+    }
+
+    #debugpane {
+      position: fixed;
+      background: rgba(0,0,0,0.65);
+      top:0;
+      left:0;
+      right:0;
+      color: #fff;
+      padding:4px 8px;
+      font-size: 0.875em;
+    }
+  </style>
+</head>
+<body>
+<div id="debugpane"></div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/tween.js/16.7.0/Tween.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
