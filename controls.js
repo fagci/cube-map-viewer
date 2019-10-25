@@ -8,6 +8,7 @@ class PanControls {
     this.mouseY = 0
     this.mouseMoved = false
     this.mouse = new THREE.Vector2()
+    console.log('init controls')
   }
 
   rotateScene (deltaX, deltaY) {
@@ -46,13 +47,12 @@ class PanControls {
   }
 
   addMouseHandler () {
-    this.container.addEventListener('mousemove', this.onMouseMove, false)
-    this.container.addEventListener('mousedown', this.onMouseDown, false)
-    this.container.addEventListener('mouseup', this.onMouseUp, false)
+    this.container.addEventListener('mousemove', (e) => this.onMouseMove(e), false)
+    this.container.addEventListener('mousedown', (e) => this.onMouseDown(e), false)
+    this.container.addEventListener('mouseup', (e) => this.onMouseUp(e), false)
   }
 
   init () {
-    this.container.addEventListener('mousemove', this.onMouseMove, false)
     this.addMouseHandler()
   }
 }

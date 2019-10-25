@@ -1,11 +1,14 @@
 const ROOM_SIZE = 30.0
 const HALF_RS = ROOM_SIZE / 2
-const SRC_PATH = 'https://b737c3d1.ngrok.io/cubemap_textures/'
-const FOV = 75
+// const SRC_PATH = 'https://b737c3d1.ngrok.io/cubemap_textures/'
+const SRC_PATH = '/res/'
+const FOV = 95
 const ROOMS_SPECIFICATION = {
   cubes: {
-    1: [1, 2, 3, 4, 5, 6],
-    2: [7, 8, 9, 10, 11, 12]
+    // 1: [1, 2, 3, 4, 5, 6],
+    // 2: [7, 8, 9, 10, 11, 12],
+    1: 'render_light0001',
+    2: 'render_light0002'
   },
   map: [
     [0, 2, 0],
@@ -31,6 +34,30 @@ let insetWidth, insetHeight
 const textureLoader = new THREE.TextureLoader().setPath(SRC_PATH)
 
 const debugPane = document.querySelector('#debugpane')
+
+function makeRoomFromSS(fname) {
+  const materials = []
+  textureLoader.load(fname + '.jpg', function(map){
+    console.log('tex loaded')
+    map.minFilter = THREE.LinearFilter
+    map.repeat.x = 1.0 / 6
+      
+    for (let i=0; i<6; i++) {
+      map.offset.x = i * 1.0 / 6
+      let mat = new THREE.MeshBasicMaterial({
+        map: map.clone(),
+        side: THREE.BackSide,
+      });
+      mat.map.needsUpdate = true
+      materials.push(mat)
+    }
+  })
+
+  const room = new THREE.BoxGeometry(ROOM_SIZE, ROOM_SIZE, ROOM_SIZE)
+  const cube = new THREE.Mesh(room, materials)
+  cube.scale.x = -1
+  return cube
+}
 
 function makeRoom (sideNames) {
   const materials = []
@@ -59,7 +86,7 @@ function makeRooms (specification) {
     for (let i in map[j]) {
       let cubePreset = map[j][i]
       if (!cubePreset) continue
-      let room = makeRoom(specification.cubes[cubePreset])
+      let room = makeRoomFromSS(specification.cubes[cubePreset])
       room.position.set(ROOM_SIZE * i - correction, HALF_RS, ROOM_SIZE * j - correction)
       rooms.add(room)
     }
@@ -184,20 +211,20 @@ function animate () {
   TWEEN.update()
   requestAnimationFrame(animate)
 
-  raycaster.setFromCamera(mouse, camera)
+  // raycaster.setFromCamera(mouse, camera)
 
-  let intersections = raycaster.intersectObjects(
-    rooms.children.filter(function (ch) {
-      return !isPointInsideObject(camera.position, ch)
-    })
-  )
-  let intersection = intersections.length > 0 ? intersections[0] : null
-  if (intersection) {
-    navHelper.visible = true
-    navHelper.position.copy(intersection.point)
-  } else {
-    navHelper.visible = false
-  }
+  // let intersections = raycaster.intersectObjects(
+  //   rooms.children.filter(function (ch) {
+  //     return !isPointInsideObject(camera.position, ch)
+  //   })
+  // )
+  // let intersection = intersections.length > 0 ? intersections[0] : null
+  // if (intersection) {
+  //   navHelper.visible = true
+  //   navHelper.position.copy(intersection.point)
+  // } else {
+  //   navHelper.visible = false
+  // }
 
   render()
   stats.end()
