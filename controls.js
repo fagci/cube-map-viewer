@@ -1,6 +1,6 @@
 class PanControls {
 
-  constructor (camera, container) {
+  constructor(camera, container) {
     this.camera = camera
     this.container = container
     this.mouseDown = false
@@ -8,51 +8,59 @@ class PanControls {
     this.mouseY = 0
     this.mouseMoved = false
     this.mouse = new THREE.Vector2()
-    console.log('init controls')
   }
 
-  rotateScene (deltaX, deltaY) {
-    this.camera.rotation.y += -deltaX / 500
+  rotateScene(deltaX, deltaY) {
+    this.camera.rotation.y += -deltaX / 400
     // this.camera.rotation.x += -deltaY / 500;
   }
 
-  onMouseMove (evt) {
-    this.mouse.x = evt.clientX / window.innerWidth * 2 - 1
-    this.mouse.y = -(evt.clientY / window.innerHeight) * 2 + 1
+  onMouseMove(e) {
+
+    let posX = e.touches ? e.touches[0].pageX : e.clientX
+    let posY = e.touches ? e.touches[0].pageY : e.clientY
+
+    this.mouse.x = posX / window.innerWidth * 2 - 1
+    this.mouse.y = -(posY / window.innerHeight) * 2 + 1
     if (!this.mouseDown) return
 
-    evt.preventDefault()
+    e.preventDefault()
 
-    let deltaX = evt.clientX - this.mouseX
-    let deltaY = evt.clientY - this.mouseY
-    this.mouseX = evt.clientX
-    this.mouseY = evt.clientY
+    let deltaX = posX - this.mouseX
+    let deltaY = posY - this.mouseY
+    this.mouseX = posX
+    this.mouseY = posY
     this.mouseMoved = true
     this.rotateScene(deltaX, deltaY)
   }
 
-  onMouseDown (evt) {
-    evt.preventDefault()
+  onMouseDown(e) {
+    e.preventDefault()
 
     this.mouseDown = true
-    this.mouseX = evt.clientX
-    this.mouseY = evt.clientY
+    this.mouseX = e.touches ? e.touches[0].pageX : e.clientX
+    this.mouseY = e.touches ? e.touches[0].pageY : e.clientY
     this.mouseMoved = false
   }
 
-  onMouseUp (evt) {
+  onMouseUp(evt) {
     evt.preventDefault()
     this.mouseDown = false
     if (!this.mouseMoved) moveIntoView()
   }
 
-  addMouseHandler () {
+  addMouseHandler() {
     this.container.addEventListener('mousemove', (e) => this.onMouseMove(e), false)
+    this.container.addEventListener('touchmove', (e) => this.onMouseMove(e), false)
+
     this.container.addEventListener('mousedown', (e) => this.onMouseDown(e), false)
+    this.container.addEventListener('touchstart', (e) => this.onMouseDown(e), false)
+
     this.container.addEventListener('mouseup', (e) => this.onMouseUp(e), false)
+    this.container.addEventListener('touchend', (e) => this.onMouseUp(e), false)
   }
 
-  init () {
+  init() {
     this.addMouseHandler()
   }
 }
