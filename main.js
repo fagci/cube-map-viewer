@@ -3,33 +3,6 @@ const HALF_RS = ROOM_SIZE / 2
 // const SRC_PATH = 'https://b737c3d1.ngrok.io/cubemap_textures/'
 const SRC_PATH = '/res/'
 const FOV = 95
-const ROOMS_SPECIFICATION = {
-  cubes: {
-    // 1: [1, 2, 3, 4, 5, 6],
-    // 2: [7, 8, 9, 10, 11, 12],
-    1: 'render_light0001',
-    2: 'render_light0002',
-    3: 'render_light0003',
-    4: 'render_light0004',
-    5: 'render_light0005',
-    6: 'render_light0006',
-    7: 'render_light0007',
-    8: 'render_light0008',
-    9: 'render_light0009',
-    10: 'render_light0010',
-    11: 'render_light0011',
-    12: 'render_light0012',
-    13: 'render_light0013',
-    14: 'render_light0014',
-    15: 'render_light0015',
-    16: 'render_light0016',
-  },
-  map: [
-    [0, 2, 0],
-    [5, 1, 3],
-    [0, 4, 0]
-  ]
-}
 
 let container
 let camera, scene, renderer
@@ -53,7 +26,7 @@ function makeRoomFromSS(fname) {
   const materials = []
   console.log('Make room from spritesheet ' + fname);
   textureLoader.load(fname + '.jpg', function (map) {
-    console.log('tex loaded')
+    console.log('texture loaded')
     map.minFilter = THREE.LinearFilter
     map.repeat.x = 1.0 / 6
 
@@ -104,18 +77,23 @@ function makeRoom(sideNames) {
   return cube
 }
 
-function makeRooms(specification) {
-  const map = specification.map
-  const correction = (ROOMS_SPECIFICATION.map.length - 1) * HALF_RS
-  for (let j in map) {
-    for (let i in map[j]) {
-      let cubePreset = map[j][i]
-      if (!cubePreset) continue
-      let room = makeRoomFromSS(specification.cubes[cubePreset])
-      room.position.set(ROOM_SIZE * i - correction, HALF_RS, ROOM_SIZE * j - correction)
+function makeRooms() {
+  fetch('/res/point.txt')
+  .then((d) => d.text())
+  .then(t => {
+    console.log(t)
+    t.split('\n').forEach((m) => {
+      let matches = m.match(/^(\d+) X=([0-9.-]+) Y=([0-9.-]+) Z=([0-9.-]+)$/i)
+      
+      let num = +matches[1];
+      let x = +matches[2];
+      let z = +matches[3];
+
+      let room = makeRoomFromSS('render_light'+('000'+num).slice(-4))
+      room.position.set(x, HALF_RS, z)
       rooms.add(room)
-    }
-  }
+    })
+  })
 }
 
 let targetPoint = null
@@ -171,14 +149,16 @@ function initScene() {
   camera.position.z = -0.001
   camera.lookAt(HALF_RS, HALF_RS, 0)
 
-  let mmSize = ROOMS_SPECIFICATION.map.length * HALF_RS
+  makeRooms()
+
+  let mmSize = 9
   minimapCamera = new THREE.OrthographicCamera(-mmSize, mmSize, mmSize, -mmSize, 0.01, 1000)
   scene.add(minimapCamera)
 
   minimapCamera.position.y = 200
   minimapCamera.lookAt(camera.position)
 
-  makeRooms(ROOMS_SPECIFICATION)
+  
   scene.add(rooms)
 
   // INIT NAV
@@ -187,7 +167,7 @@ function initScene() {
   })
   mat.depthTest = false
 
-  navHelper = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), mat)
+  navHelper = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 32), mat)
   navHelper.position.set(24, 24, 0)
   scene.add(navHelper)
 }
@@ -235,20 +215,20 @@ function animate() {
   TWEEN.update()
   requestAnimationFrame(animate)
 
-  // raycaster.setFromCamera(mouse, camera)
+  raycaster.setFromCamera(controls.mouse, camera)
 
-  // let intersections = raycaster.intersectObjects(
-  //   rooms.children.filter(function (ch) {
-  //     return !isPointInsideObject(camera.position, ch)
-  //   })
-  // )
-  // let intersection = intersections.length > 0 ? intersections[0] : null
-  // if (intersection) {
-  //   navHelper.visible = true
-  //   navHelper.position.copy(intersection.point)
-  // } else {
-  //   navHelper.visible = false
-  // }
+  let intersections = raycaster.intersectObjects(
+    rooms.children.filter(function (ch) {
+      return !isPointInsideObject(camera.position, ch)
+    })
+  )
+  let intersection = intersections.length > 0 ? intersections[0] : null
+  if (intersection) {
+    navHelper.visible = true
+    navHelper.position.copy(intersection.point)
+  } else {
+    navHelper.visible = false
+  }
 
   render()
   stats.end()
@@ -262,8 +242,8 @@ function render() {
   renderer.setClearColor(0x333333)
   renderer.clearDepth()
   renderer.setScissorTest(true)
-  renderer.setScissor(16, window.innerHeight - insetHeight - 16, insetWidth, insetHeight)
-  renderer.setViewport(16, window.innerHeight - insetHeight - 16, insetWidth, insetHeight)
+  renderer.setScissor(16, 16, insetWidth, insetHeight)
+  renderer.setViewport(16, 16, insetWidth, insetHeight)
   renderer.render(scene, minimapCamera)
   renderer.setScissorTest(false)
 }
