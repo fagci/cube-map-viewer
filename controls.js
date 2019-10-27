@@ -1,6 +1,6 @@
 class PanControls {
 
-  constructor(camera, container) {
+  constructor(camera, container, cbClick) {
     this.camera = camera
     this.container = container
     this.mouseDown = false
@@ -8,6 +8,8 @@ class PanControls {
     this.mouseY = 0
     this.mouseMoved = false
     this.mouse = new THREE.Vector2()
+    this.cbClick = cbClick
+    this.init()
   }
 
   rotateScene(deltaX, deltaY) {
@@ -46,7 +48,7 @@ class PanControls {
   onMouseUp(evt) {
     evt.preventDefault()
     this.mouseDown = false
-    if (!this.mouseMoved) moveIntoView()
+    if (!this.mouseMoved && this.cbClick) this.cbClick(this.mouse)
   }
 
   addMouseHandler() {

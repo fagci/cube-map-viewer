@@ -1,6 +1,5 @@
 const ROOM_SIZE = 3.0
 const HALF_RS = ROOM_SIZE / 2
-// const SRC_PATH = 'https://b737c3d1.ngrok.io/cubemap_textures/'
 const SRC_PATH = '/res/'
 const FOV = 95
 
@@ -11,40 +10,35 @@ let navHelper
 let stats
 
 let controls
-const raycaster = new THREE.Raycaster()
+let navigation
 
-const rooms = new THREE.Group()
+
+let rooms;
 let currentRoom;
 
 let windowHalfX, windowHalfY
 let insetWidth, insetHeight
 
-const loadManager = new THREE.LoadingManager();
-const textureLoader = new THREE.TextureLoader(loadManager).setPath(SRC_PATH)
-
 const debugPane = document.querySelector('#debugpane')
-const loadingElem = document.querySelector('#loading');
-const progressBarElem = loadingElem.querySelector('.progressbar');
-
-loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
-  const progress = itemsLoaded / itemsTotal;
-  progressBarElem.style.transform = `scaleX(${progress})`;
-};
-
 const cubeGeometry = new CubeGeometry(ROOM_SIZE);
+const textureManager = new TextureManager(SRC_PATH, '#loading', '.progressbar');
 
 function makeRoomFromSS(fname, position) {
-  const map = textureLoader.load(fname)  
+  const map = textureManager.load(fname)  
   map.minFilter = THREE.NearestFilter;
   map.magFilter = THREE.NearestFilter;
   const mat = new THREE.MeshBasicMaterial({map, side: THREE.BackSide, color: 0xffffff, transparent: true});
   const cube = new THREE.Mesh(cubeGeometry, mat)
   cube.scale.x = -1
   cube.position.copy(position)
+  cube.layers.enable(1) // all rooms in two layers by default
+  cube.layers.disable(0)
   rooms.add(cube)
 }
 
-function makeRooms() {
+function initRooms() {
+  rooms = new THREE.Group()
+  scene.add(rooms)
   fetch('/res/point.txt')
   .then((d) => d.text())
   .then(t => {
@@ -54,82 +48,45 @@ function makeRooms() {
       let name = 'render_light'+('000'+matches[1]).slice(-4) + '.jpg'
       let position = new THREE.Vector3(+matches[2], HALF_RS, +matches[3])
       makeRoomFromSS(name, position)
+      navigation.setRoom(rooms.children[0])
     })
   })
 }
 
-let targetPoint = null
 
-function moveIntoView() {
-  let intersections = raycaster.intersectObjects(
-    rooms.children.filter(function (ch) {
-      return !isPointInsideObject(camera.position, ch)
-    })
-  )
-  let intersection = intersections.length > 0 ? intersections[0] : null
-  if (!intersection) return
-  targetPoint = intersection.object.position
-  let srcCube;
-  let dstCube = intersection.object;
 
-  rooms.children.filter(function (ch) {
-    ch.material.opacity = 0
-    if(camera.position.equals(ch.position)) {
-      srcCube = ch;
-    }
-  })
-
-  animateVector3(camera.position, targetPoint, {
-    duration: 1000,
-    easing: TWEEN.Easing.Quadratic.InOut,
-    update: function (d) {
-      if(srcCube)srcCube.material.opacity = 1 - d
-      dstCube.material.opacity = d
-    },
-    callback: function () {
-      // dstCube.visible = 1
-    }
-  })
-}
-
-function initScene() {
-  scene = new THREE.Scene()
-
-  scene.add(rooms)
-
-  makeRooms()
-  
+function initCamera () {
   camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 400)
-  camera.position.set(0,ROOM_SIZE / 2, -0.01)
-  camera.lookAt(HALF_RS, HALF_RS, 0)
+  camera.position.set(0, 0, -0.01)
+  // camera.lookAt(200, HALF_RS, 0)
+}
 
-  
+function initMinimap () {
   let mmSize = 9
   minimapCamera = new THREE.OrthographicCamera(-mmSize, mmSize, mmSize, -mmSize, 0.01, 1000)
   scene.add(minimapCamera)
 
   minimapCamera.position.y = 20
   minimapCamera.lookAt(camera.position)
+  minimapCamera.layers.enable(1)
+  minimapCamera.layers.disable(0)
+}
 
-  loadManager.onLoad = () => {  
-    loadingElem.style.display = 'none';
-  }
+function initScene() {
+  scene = new THREE.Scene()
 
-  // INIT NAV
-  const mat = new THREE.MeshBasicMaterial({
-    color: 0x00ff00
-  })
-  mat.depthTest = false
-
-  navHelper = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 32), mat)
-  navHelper.position.set(24, 24, 0)
-  scene.add(navHelper)
+  initRooms()
+  initCamera()
+  initMinimap()
+  
+  navigation = new Navigation(scene, rooms, camera, minimapCamera)
 }
 
 function initRenderer() {
   renderer = new THREE.WebGLRenderer()
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.alpha = true
   container.appendChild(renderer.domElement)
 }
 
@@ -146,8 +103,7 @@ function init() {
   window.addEventListener('resize', onWindowResize, false)
   onWindowResize()
 
-  controls = new PanControls(camera, container)
-  controls.init()
+  controls = new PanControls(camera, container, (mouse) => navigation.handleClick(mouse))
 }
 
 function onWindowResize() {
@@ -169,20 +125,7 @@ function animate() {
   TWEEN.update()
   requestAnimationFrame(animate)
 
-  raycaster.setFromCamera(controls.mouse, camera)
-
-  let intersections = raycaster.intersectObjects(
-    rooms.children.filter(function (ch) {
-      return !isPointInsideObject(camera.position, ch)
-    })
-  )
-  let intersection = intersections.length > 0 ? intersections[0] : null
-  if (intersection) {
-    navHelper.visible = true
-    navHelper.position.copy(intersection.point)
-  } else {
-    navHelper.visible = false
-  }
+  navigation.update()
 
   render()
   stats.end()
