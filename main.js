@@ -22,7 +22,7 @@ let insetWidth, insetHeight
 const debugPane = document.querySelector('#debugpane')
 const cubeGeometry = new CubeGeometry(ROOM_SIZE);
 const textureManager = new TextureManager(SRC_PATH, '#loading', '.progressbar');
-let rh = 0;
+
 function makeRoomFromSS(fname, position) {
   const map = textureManager.load(fname)  
   map.minFilter = THREE.LinearFilter;
@@ -31,10 +31,8 @@ function makeRoomFromSS(fname, position) {
   const mat = new THREE.MeshBasicMaterial({map, side: THREE.BackSide, color: 0xffffff, transparent: true});
   const cube = new THREE.Mesh(cubeGeometry, mat)
   cube.scale.x = -1
-  cube.rotation.y = - Math.PI / 2
+  cube.rotation.y = Math.PI / 2
   cube.position.copy(position)
-  cube.position.y = rh
-  rh+=0.0001
   cube.layers.enable(1) // all rooms in two layers by default
   cube.layers.disable(0)
 

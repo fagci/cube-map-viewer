@@ -6,13 +6,19 @@ class Navigation {
 
     this.raycaster = new THREE.Raycaster()
 
-    const mat = new THREE.MeshBasicMaterial({ color: 0x00ff00, depthTest: false })
+    this.navHelper = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0x00ff00, depthTest: false, transparent: true })
+    )
+    this.navHelper.layers.enable(1)
+    this.navHelper.layers.enable(0)
+    this.navHelper.renderOrder = 1
 
-    this.navHelper = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 32), mat)
+    this.whereAmI = new THREE.Mesh(
+      new THREE.SphereGeometry(0.6, 32, 32), 
+      new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    )
 
-    const cube = new THREE.SphereGeometry(0.6,32,32);
-    this.whereAmI = new THREE.Mesh(cube, new THREE.MeshBasicMaterial({color: 0xff0000}))
-    
     this.whereAmI.layers.disable(0)
     this.whereAmI.layers.enable(1)
     this.whereAmI.position.y = 1
@@ -23,7 +29,7 @@ class Navigation {
   }
 
   setRoom(room) {
-    if(this.currentRoom) this.currentRoom.layers.disable(0)
+    if (this.currentRoom) this.currentRoom.layers.disable(0)
     this.currentRoom = room
     this.currentRoom.layers.enable(0)
     this.camera.position.copy(this.currentRoom.position)
@@ -32,51 +38,66 @@ class Navigation {
 
   update(mouse) {
     this.raycaster.setFromCamera(mouse, this.camera)
-
-    let intersections = this.raycaster.intersectObjects(
-      this.rooms.children.filter((ch) => {
-        return !isPointInsideObject(this.camera.position, ch)
-      })
-    )
-    let intersection = intersections.length > 0 ? intersections[0] : null
-    if (intersection) {
-      this.navHelper.visible = true
-      this.navHelper.position.copy(intersection.point)
-    } else {
+    const farPoint = this.getFarIntersectionPoint()
+    if (!farPoint) {
       this.navHelper.visible = false
+      return;
     }
 
+    this.navHelper.position.copy(farPoint)
+    this.navHelper.visible = true
+
+  }
+
+  getFarIntersectionPoint(mouse) {
+    let maxDistancePoint;
+    const otherRooms = this.rooms.children.filter((ch) => {
+      return ch.object !== this.currentRoom
+    })
+
+    let intersections = this.raycaster.intersectObjects(otherRooms)
+    if (!intersections.length) return null
+
+    let maxDistance = 0;
+
+    intersections.filter((ch) => {
+      const distance = ch.point.distanceTo(this.camera.position)
+      if (maxDistance < distance) {
+        maxDistancePoint = ch.point
+        maxDistance = distance
+      }
+    })
+    return maxDistancePoint
   }
 
   handleClick(mouse) {
     let dstCube;
-    const otherRooms = this.rooms.children.filter((ch) => {
-      return ch !== this.currentRoom
-    })
+    const srcCube = this.currentRoom
+    const farPoint = this.getFarIntersectionPoint()
+    if (!farPoint) return;
 
-    let intersections = this.raycaster.intersectObjects(otherRooms)
-    if (!intersections.length) return
-
-    dstCube = intersections[0].object
-
-    const srcCube = this.currentRoom;
-    let maxDistance = dstCube.position.distanceTo(srcCube.position);
-
-    intersections.filter((ch) => {
-      const distance = ch.object.position.distanceTo(srcCube.position)
-      if(maxDistance < distance) {
-        dstCube = ch.object
+    let nearestDistance = Infinity
+    this.rooms.children.filter((ch) => {
+      let distance = farPoint.distanceTo(ch.position)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        dstCube = ch
       }
     })
+
+    if (srcCube == dstCube) return;
 
     srcCube.layers.enable(0)
     dstCube.layers.enable(0)
 
+    dstCube.opacity = 1
+
     animateVector3(this.camera.position, dstCube.position, {
       duration: 1000,
       easing: TWEEN.Easing.Quadratic.InOut,
-      update: function (d) {
+      update: (d) => {
         srcCube.material.opacity = 1 - d
+        this.whereAmI.position.copy(this.camera.position)
       },
       callback: () => {
         srcCube.layers.disable(0)

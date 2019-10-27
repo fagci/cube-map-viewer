@@ -16,7 +16,7 @@ class PanControls {
     this.phi = 0;
     this.theta = 0;
 
-    this.target = new THREE.Vector3(0, 0, 0);
+    this.target = camera.getWorldDirection();
     this.verticalMin       = 0;
     this.verticalMax       = Math.PI;
 
