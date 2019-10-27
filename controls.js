@@ -16,7 +16,7 @@ class PanControls {
     this.phi = 0;
     this.theta = 0;
 
-    this.target = camera.getWorldDirection();
+    this.target = new THREE.Vector3(0,0,0);
     this.verticalMin       = 0;
     this.verticalMax       = Math.PI;
 
@@ -39,7 +39,7 @@ class PanControls {
     let deltaY = posY - this.mouseY
     this.mouseX = posX
     this.mouseY = posY
-    this.mouseMoved = true
+    if(Math.abs(deltaX)+Math.abs(deltaY) > 5) this.mouseMoved = true
 
 
 

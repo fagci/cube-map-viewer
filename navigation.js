@@ -15,7 +15,7 @@ class Navigation {
     this.navHelper.renderOrder = 1
 
     this.whereAmI = new THREE.Mesh(
-      new THREE.SphereGeometry(0.6, 32, 32), 
+      new THREE.SphereGeometry(0.45, 16, 16), 
       new THREE.MeshBasicMaterial({ color: 0xff0000 })
     )
 
@@ -90,18 +90,22 @@ class Navigation {
     srcCube.layers.enable(0)
     dstCube.layers.enable(0)
 
-    dstCube.opacity = 1
+    dstCube.material.opacity = 1
+    dstCube.material.transparent = false
 
     animateVector3(this.camera.position, dstCube.position, {
       duration: 1000,
       easing: TWEEN.Easing.Quadratic.InOut,
       update: (d) => {
         srcCube.material.opacity = 1 - d
+        srcCube.material.transparent = true
         this.whereAmI.position.copy(this.camera.position)
       },
       callback: () => {
         srcCube.layers.disable(0)
         srcCube.material.opacity = 1
+        srcCube.material.transparent = false
+
         this.currentRoom = dstCube
         this.whereAmI.position.copy(this.currentRoom.position)
       }

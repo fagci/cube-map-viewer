@@ -1,7 +1,7 @@
 const ROOM_SIZE = 3.0
 const HALF_RS = ROOM_SIZE / 2
 const SRC_PATH = '/res/'
-const FOV = 95
+const FOV = 75
 
 let container
 let camera, scene, renderer
@@ -23,27 +23,31 @@ const debugPane = document.querySelector('#debugpane')
 const cubeGeometry = new CubeGeometry(ROOM_SIZE);
 const textureManager = new TextureManager(SRC_PATH, '#loading', '.progressbar');
 
+let overlapFixHeight = 0.0;
+
 function makeRoomFromSS(fname, position) {
   const map = textureManager.load(fname)  
   map.minFilter = THREE.LinearFilter;
   map.magFilter = THREE.LinearFilter;
   map.anisotropy = 16
-  const mat = new THREE.MeshBasicMaterial({map, side: THREE.BackSide, color: 0xffffff, transparent: true});
+  const mat = new THREE.MeshBasicMaterial({map, side: THREE.BackSide, color: 0xffffff});
   const cube = new THREE.Mesh(cubeGeometry, mat)
   cube.scale.x = -1
   cube.rotation.y = Math.PI / 2
   cube.position.copy(position)
   cube.layers.enable(1) // all rooms in two layers by default
   cube.layers.disable(0)
+  cube.name = fname
+  cube.position.y += overlapFixHeight
+  overlapFixHeight += 0.0001
+  // cube.matrixAutoUpdate = false
 
-  const gh = new THREE.GridHelper(ROOM_SIZE,10,0xff0000,0x000000)
-  gh.position.y = -HALF_RS
-  cube.add(gh)
   rooms.add(cube)
 }
 
 function initRooms() {
   rooms = new THREE.Group()
+  rooms.name = 'Cubes group'
   scene.add(rooms)
   fetch('/res/point.txt')
   .then((d) => d.text())
@@ -59,12 +63,10 @@ function initRooms() {
   })
 }
 
-
-
 function initCamera () {
   camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 400)
   camera.position.set(0, 0, -0.01)
-  // camera.lookAt(200, HALF_RS, 0)
+  camera.lookAt(200, HALF_RS, 0)
 }
 
 function initMinimap () {
@@ -80,6 +82,7 @@ function initMinimap () {
 
 function initScene() {
   scene = new THREE.Scene()
+  window.scene = scene
 
   initRooms()
   initCamera()
@@ -89,10 +92,9 @@ function initScene() {
 }
 
 function initRenderer() {
-  renderer = new THREE.WebGLRenderer()
+  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.alpha = true
   container.appendChild(renderer.domElement)
 }
 
@@ -119,8 +121,8 @@ function onWindowResize() {
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
 
-  insetWidth = window.innerHeight / 2
-  insetHeight = window.innerHeight / 2
+  insetWidth = window.innerHeight / 4
+  insetHeight = window.innerHeight / 4
 
   minimapCamera.aspect = insetWidth / insetHeight
   minimapCamera.updateProjectionMatrix()
@@ -138,7 +140,7 @@ function animate() {
 }
 
 function render() {
-  renderer.setClearColor(0x00aaee)
+  renderer.setClearColor(0xffffff)
   renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
   renderer.render(scene, camera)
 
