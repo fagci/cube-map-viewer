@@ -22,17 +22,25 @@ let insetWidth, insetHeight
 const debugPane = document.querySelector('#debugpane')
 const cubeGeometry = new CubeGeometry(ROOM_SIZE);
 const textureManager = new TextureManager(SRC_PATH, '#loading', '.progressbar');
-
+let rh = 0;
 function makeRoomFromSS(fname, position) {
   const map = textureManager.load(fname)  
-  map.minFilter = THREE.NearestFilter;
-  map.magFilter = THREE.NearestFilter;
+  map.minFilter = THREE.LinearFilter;
+  map.magFilter = THREE.LinearFilter;
+  map.anisotropy = 16
   const mat = new THREE.MeshBasicMaterial({map, side: THREE.BackSide, color: 0xffffff, transparent: true});
   const cube = new THREE.Mesh(cubeGeometry, mat)
   cube.scale.x = -1
+  cube.rotation.y = - Math.PI / 2
   cube.position.copy(position)
+  cube.position.y = rh
+  rh+=0.0001
   cube.layers.enable(1) // all rooms in two layers by default
   cube.layers.disable(0)
+
+  const gh = new THREE.GridHelper(ROOM_SIZE,10,0xff0000,0x000000)
+  gh.position.y = -HALF_RS
+  cube.add(gh)
   rooms.add(cube)
 }
 
@@ -62,7 +70,7 @@ function initCamera () {
 }
 
 function initMinimap () {
-  let mmSize = 9
+  let mmSize = 6
   minimapCamera = new THREE.OrthographicCamera(-mmSize, mmSize, mmSize, -mmSize, 0.01, 1000)
   scene.add(minimapCamera)
 
@@ -113,8 +121,8 @@ function onWindowResize() {
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
 
-  insetWidth = window.innerHeight / 4
-  insetHeight = window.innerHeight / 4
+  insetWidth = window.innerHeight / 2
+  insetHeight = window.innerHeight / 2
 
   minimapCamera.aspect = insetWidth / insetHeight
   minimapCamera.updateProjectionMatrix()
@@ -125,7 +133,7 @@ function animate() {
   TWEEN.update()
   requestAnimationFrame(animate)
 
-  navigation.update()
+  navigation.update(controls.mouse)
 
   render()
   stats.end()

@@ -9,7 +9,15 @@ class Navigation {
     const mat = new THREE.MeshBasicMaterial({ color: 0x00ff00, depthTest: false })
 
     this.navHelper = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 32), mat)
-    this.navHelper.position.set(24, 24, 0)
+
+    const cube = new THREE.SphereGeometry(0.6,32,32);
+    this.whereAmI = new THREE.Mesh(cube, new THREE.MeshBasicMaterial({color: 0xff0000}))
+    
+    this.whereAmI.layers.disable(0)
+    this.whereAmI.layers.enable(1)
+    this.whereAmI.position.y = 1
+
+    scene.add(this.whereAmI)
 
     scene.add(this.navHelper)
   }
@@ -19,10 +27,11 @@ class Navigation {
     this.currentRoom = room
     this.currentRoom.layers.enable(0)
     this.camera.position.copy(this.currentRoom.position)
+    this.whereAmI.position.copy(this.currentRoom.position)
   }
 
-  update() {
-    this.raycaster.setFromCamera(controls.mouse, this.camera)
+  update(mouse) {
+    this.raycaster.setFromCamera(mouse, this.camera)
 
     let intersections = this.raycaster.intersectObjects(
       this.rooms.children.filter((ch) => {
@@ -68,11 +77,12 @@ class Navigation {
       easing: TWEEN.Easing.Quadratic.InOut,
       update: function (d) {
         srcCube.material.opacity = 1 - d
-        dstCube.material.opacity = d
       },
       callback: () => {
         srcCube.layers.disable(0)
+        srcCube.material.opacity = 1
         this.currentRoom = dstCube
+        this.whereAmI.position.copy(this.currentRoom.position)
       }
     })
   }

@@ -9,12 +9,19 @@ class PanControls {
     this.mouseMoved = false
     this.mouse = new THREE.Vector2()
     this.cbClick = cbClick
-    this.init()
-  }
 
-  rotateScene(deltaX, deltaY) {
-    this.camera.rotation.y += -deltaX / 400
-    // this.camera.rotation.x += -deltaY / 500;
+
+    this.lat = 0;
+    this.lon = 0;
+    this.phi = 0;
+    this.theta = 0;
+
+    this.target = new THREE.Vector3(0, 0, 0);
+    this.verticalMin       = 0;
+    this.verticalMax       = Math.PI;
+
+
+    this.init()
   }
 
   onMouseMove(e) {
@@ -33,7 +40,35 @@ class PanControls {
     this.mouseX = posX
     this.mouseY = posY
     this.mouseMoved = true
-    this.rotateScene(deltaX, deltaY)
+
+
+
+
+
+
+    this.lon -= deltaX/5;
+    this.lat += deltaY/5;
+
+    this.lat = Math.max(-85, Math.min(85, this.lat));
+    this.phi = THREE.Math.degToRad(90 - this.lat);
+
+    this.theta = THREE.Math.degToRad(this.lon);
+
+    if (this.constrainVertical) {
+
+      this.phi = THREE.Math.mapLinear(this.phi, 0, Math.PI, this.verticalMin, this.verticalMax);
+
+    }
+
+    var targetPosition = this.target,
+      position = this.camera.position;
+
+    targetPosition.x = position.x + 100 * Math.sin(this.phi) * Math.cos(this.theta);
+    targetPosition.y = position.y + 100 * Math.cos(this.phi);
+    targetPosition.z = position.z + 100 * Math.sin(this.phi) * Math.sin(this.theta);
+
+    this.camera.lookAt(targetPosition);
+
   }
 
   onMouseDown(e) {
