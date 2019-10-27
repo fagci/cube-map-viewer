@@ -1,3 +1,9 @@
+/**
+ * @file Pan controls for mouse/touch dragging camera rotation
+ * @copyright Mikhail Yudin aka fagci
+ * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
+ */
+
 class PanControls {
 
   constructor(camera, container, cbClick) {
@@ -40,11 +46,6 @@ class PanControls {
     this.mouseX = posX
     this.mouseY = posY
     if(Math.abs(deltaX)+Math.abs(deltaY) > 5) this.mouseMoved = true
-
-
-
-
-
 
     this.lon -= deltaX/5;
     this.lat += deltaY/5;

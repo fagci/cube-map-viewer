@@ -1,10 +1,3 @@
-const boundingBox = new THREE.Box3() // for re-use
-
-function isPointInsideObject (point, object) {
-  boundingBox.setFromObject(object)
-  return boundingBox.containsPoint(point)
-}
-
 function animateVector3(vectorToAnimate, target, options) {
   options = options || {}
   // get targets from options or set to defaults

@@ -1,3 +1,9 @@
+/**
+ * @file Helps with navigation and movement with animation
+ * @copyright Mikhail Yudin aka fagci
+ * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
+ */
+
 class Navigation {
   constructor(scene, rooms, camera, minimapCamera) {
     this.rooms = rooms

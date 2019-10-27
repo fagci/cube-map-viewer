@@ -1,7 +1,14 @@
+/**
+ * @file Shows Cube Maps to users as Google Map Street View
+ * @copyright Mikhail Yudin aka fagci
+ * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
+ */
+
 const ROOM_SIZE = 3.0
-const HALF_RS = ROOM_SIZE / 2
 const SRC_PATH = '/res/'
 const FOV = 75
+
+const HALF_RS = ROOM_SIZE / 2
 
 let container
 let camera, scene, renderer
@@ -11,7 +18,6 @@ let stats
 
 let controls
 let navigation
-
 
 let rooms;
 let currentRoom;
@@ -40,7 +46,6 @@ function makeRoomFromSS(fname, position) {
   cube.name = fname
   cube.position.y += overlapFixHeight
   overlapFixHeight += 0.0001
-  // cube.matrixAutoUpdate = false
 
   rooms.add(cube)
 }
@@ -70,7 +75,7 @@ function initCamera () {
 }
 
 function initMinimap () {
-  let mmSize = 6
+  let mmSize = 6 // TODO: make it relative to full map size
   minimapCamera = new THREE.OrthographicCamera(-mmSize, mmSize, mmSize, -mmSize, 0.01, 1000)
   scene.add(minimapCamera)
 

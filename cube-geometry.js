@@ -1,3 +1,9 @@
+/**
+ * @file Cube geometry with UV for linear spritesheet
+ * @copyright Mikhail Yudin aka fagci
+ * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
+ */
+
 class CubeGeometry extends THREE.BoxGeometry {
   constructor(size) {
     super(size, size, size)
