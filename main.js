@@ -13,7 +13,6 @@ const HALF_RS = ROOM_SIZE / 2
 let container
 let camera, scene, renderer
 let minimapCamera
-let navHelper
 let stats
 
 let controls
@@ -58,7 +57,7 @@ function initRooms() {
   .then((d) => d.text())
   .then(t => {
     t.split('\n').forEach((m) => {
-      let matches = m.match(/^(\d+) X=([0-9.-]+) Y=([0-9.-]+) Z=([0-9.-]+)$/i)
+      let matches = m.match(/^(\d+) X=([0-9.-]+) Y=([0-9.-]+) Z=([0-9.-]+)/i)
       if(!matches) return
       let name = 'render_light'+('000'+matches[1]).slice(-4) + '.jpg'
       let position = new THREE.Vector3(+matches[2], HALF_RS, +matches[3])
