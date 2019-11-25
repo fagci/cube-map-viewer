@@ -22,7 +22,6 @@ const HALF_RS = ROOM_SIZE / 2
 let container
 let camera, scene, renderer
 let minimapCamera
-let stats
 
 let controls
 let navigation
@@ -150,8 +149,6 @@ function initRenderer () {
 
 function init () {
   THREE.Cache.enabled = true
-  stats = new Stats()
-  debugPane.appendChild(stats.domElement)
   container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -179,14 +176,12 @@ function onWindowResize () {
 }
 
 function animate () {
-  stats.begin()
   TWEEN.update()
   requestAnimationFrame(animate)
 
   navigation.update(controls.mouse)
 
   render()
-  stats.end()
 }
 
 function render () {

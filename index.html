@@ -46,9 +46,25 @@
       transform: scaleX(0);
     }
   </style>
+  <script>
+    function openFullscreen () {
+      let elem = document.querySelector('canvas')
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen()
+      } else if (elem.mozRequestFullScreen) { /* Firefox */
+        elem.mozRequestFullScreen()
+      } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        elem.webkitRequestFullscreen()
+      } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen()
+      }
+    }
+  </script>
 </head>
 <body>
-<div id="debugpane"></div>
+<div id="debugpane">
+  <button onclick="openFullscreen()">На полный экран</button>
+</div>
 <div id="loading">
   <div class="progress">
     <div class="progressbar"></div>
