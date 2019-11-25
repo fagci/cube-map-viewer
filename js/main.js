@@ -4,7 +4,8 @@
  * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
  */
 
-const quality = window.location.search.match(/quality=(\d+)/)[1] || 256
+const paramMatch = window.location.search.match(/quality=(\d+)/)
+const quality = paramMatch ? paramMatch[1] : 256 || 256
 
 console.info('Quality set to', quality)
 
