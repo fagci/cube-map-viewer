@@ -4,10 +4,9 @@
  * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
  */
 
-const paramMatch = window.location.search.match(/quality=(\d+)/)
-const quality = paramMatch ? paramMatch[1] : 256 || 256
-
-console.info('Quality set to', quality)
+const isLightMode = !!window.location.search.match(/light_mode/)
+const qualityParamMatch = window.location.search.match(/quality=(\d+)/)
+const quality = qualityParamMatch ? qualityParamMatch[1] : 256 || 256
 
 const ROOM_SIZE = 3.0 // Размер комнаты
 const SRC_PATH = '/res/br' + (+quality) + '/' // Папка с рендерами кубов
@@ -19,7 +18,6 @@ const IS_INSIDEOUT = false // Вывернутый наизнанку ренде
 
 const HALF_RS = ROOM_SIZE / 2
 
-let container
 let camera, scene, renderer
 let minimapCamera
 
@@ -31,17 +29,18 @@ let cubesGroup
 let windowHalfX, windowHalfY
 let insetWidth, insetHeight
 
-const debugPane = document.querySelector('#debugpane')
 const cubeGeometry = new CubeGeometry(ROOM_SIZE)
 const textureManager = new TextureManager(SRC_PATH, '#loading', '.progressbar')
 
 let overlapFixHeight = 0.0
 
+console.info('Quality set to', quality)
+if (isLightMode) console.info('Light mode on')
+
 function makeRoomFromSS (index, position, neighbourPoints) {
-  let fName = 'big_render' + ('000' + index).slice(-4) + '.jpg'
-  const map = textureManager.load(fName)
+  const map = textureManager.load('big_render' + ('000' + index).slice(-4) + '.jpg')
   map.minFilter = map.magFilter = THREE.LinearFilter
-  map.anisotropy = renderer.capabilities.getMaxAnisotropy()
+  if (!isLightMode) map.anisotropy = renderer.capabilities.getMaxAnisotropy()
   const mat = new THREE.MeshBasicMaterial({ map, side: THREE.BackSide, color: 0xffffff })
   const cube = new THREE.Mesh(cubeGeometry, mat)
   if (IS_INSIDEOUT) cube.scale.x = -1
@@ -56,9 +55,7 @@ function makeRoomFromSS (index, position, neighbourPoints) {
   cube.name = 'Cube_' + index
 
   cube.position.y += overlapFixHeight
-  overlapFixHeight += 0.0001
-
-  console.log(cube)
+  overlapFixHeight += 0.00001
 
   cubesGroup.add(cube)
 }
@@ -77,57 +74,50 @@ function parsePoints (t) {
     const neighbourPoints = matches[5].split(',')
 
     const cubePosition = new THREE.Vector3(x, y, z)
-    // const pointHelper = new THREE.AxesHelper(0.5)
-    //
-    // pointHelper.position.copy(cubePosition)
-    // pointHelper.layers.enable(1)
-    // pointHelper.material.depthTest = false
-    // pointHelper.material.transparent = true
-    // scene.add(pointHelper)
+
     makeRoomFromSS(renderNumber, cubePosition, neighbourPoints)
   })
   navigation.setRoom(cubesGroup.children[0]) // Первая комната
+  resizeMinimap()
 }
 
 function initRooms () {
   cubesGroup = new THREE.Group()
   cubesGroup.name = 'Cubes group'
   scene.add(cubesGroup)
-
-  // const gridHelper = new THREE.GridHelper(10, 10)
-  // const axisHelper = new THREE.AxesHelper(5)
-  //
-  // gridHelper.layers.enable(1)
-  // axisHelper.layers.enable(1)
-  //
-  // gridHelper.material.depthTest = false
-  // axisHelper.material.depthTest = false
-  //
-  // gridHelper.material.transparent = true
-  // axisHelper.material.transparent = true
-  //
-  // scene.add(gridHelper)
-  // scene.add(axisHelper)
-
   fetch(FILE_POINTS).then((d) => d.text()).then(parsePoints)
 }
 
 function initCamera () {
   camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.01, 200)
   camera.position.set(0, 0, -0.01)
-
   camera.lookAt(200, HALF_RS, 0)
 }
 
 function initMinimap () {
-  let mmSize = 6 // TODO: make it relative to full map size
-  minimapCamera = new THREE.OrthographicCamera(-mmSize, mmSize, mmSize, -mmSize, 0.01, 1000)
+  let mmSize = ROOM_SIZE
+  minimapCamera = new THREE.OrthographicCamera(-mmSize, mmSize, mmSize, -mmSize, 0.01, 200)
   scene.add(minimapCamera)
+  minimapCamera.rotation.set(0, 0, 0)
 
   minimapCamera.position.y = 20
   minimapCamera.lookAt(camera.position)
   minimapCamera.layers.enable(1)
   minimapCamera.layers.disable(0)
+
+  minimapCamera.aspect = insetWidth / insetHeight
+  minimapCamera.updateProjectionMatrix()
+}
+
+function resizeMinimap () {
+  const bb = new THREE.Box3().setFromObject(cubesGroup)
+  let mmSize = Math.max(bb.max.x, bb.max.z) // TODO: make it relative to full map size
+  minimapCamera.left = -mmSize
+  minimapCamera.top = mmSize
+  minimapCamera.right = mmSize
+  minimapCamera.bottom = -mmSize
+  minimapCamera.aspect = insetWidth / insetHeight
+  minimapCamera.updateProjectionMatrix()
 }
 
 function initScene () {
@@ -142,15 +132,13 @@ function initScene () {
 }
 
 function initRenderer () {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+  renderer = new THREE.WebGLRenderer({ antialias: !isLightMode, alpha: true })
   renderer.setPixelRatio(window.devicePixelRatio)
-  container.appendChild(renderer.domElement)
+  document.body.appendChild(renderer.domElement)
 }
 
 function init () {
   THREE.Cache.enabled = true
-  container = document.createElement('div')
-  document.body.appendChild(container)
 
   initRenderer()
   initScene()
@@ -158,7 +146,7 @@ function init () {
   window.addEventListener('resize', onWindowResize, false)
   onWindowResize()
 
-  controls = new PanControls(camera, container, mouse => navigation.handleClick(mouse))
+  controls = new PanControls(camera, document.body, mouse => navigation.handleClick(mouse))
 }
 
 function onWindowResize () {
@@ -176,9 +164,9 @@ function onWindowResize () {
 }
 
 function animate () {
-  TWEEN.update()
   requestAnimationFrame(animate)
 
+  if (navigation.isMoving) TWEEN.update()
   navigation.update(controls.mouse)
 
   render()

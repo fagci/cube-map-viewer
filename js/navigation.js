@@ -122,8 +122,8 @@ class Navigation {
 
       let directionVector = dir.subVectors(p2, p1).normalize()
       let angle = Math.abs(lookAtVector.angleTo(directionVector))
-      console.log(angle)
-      if (angle < minimumAngle && angle < Math.PI * FOV / 360.0) {
+
+      if (angle < minimumAngle && angle < Math.PI * FOV / 360.0) { // 360 because 1/2 of FOV
         minimumAngle = angle
         targetRoom = neighbourRoom
       }
@@ -158,7 +158,7 @@ class Navigation {
     dstCube.material.transparent = false
 
     animateVector3(this.camera.position, dstCube.position, {
-      duration: 1000,
+      duration: 750,
       easing: TWEEN.Easing.Cubic.InOut,
       update: (d) => {
         srcCube.material.opacity = 1 - TWEEN.Easing.Cubic.In(d)

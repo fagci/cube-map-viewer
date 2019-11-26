@@ -30,7 +30,6 @@ class PanControls {
   }
 
   onMouseMove (e) {
-
     let posX = e.touches ? e.touches[0].pageX : e.clientX
     let posY = e.touches ? e.touches[0].pageY : e.clientY
 
@@ -38,7 +37,9 @@ class PanControls {
     this.mouse.y = -(posY / window.innerHeight) * 2 + 1
     if (!this.mouseDown) return
 
-    e.preventDefault()
+    if (e.cancelable) {
+      e.preventDefault()
+    }
 
     let deltaX = posX - this.mouseX
     let deltaY = posY - this.mouseY
@@ -70,7 +71,9 @@ class PanControls {
   }
 
   onMouseDown (e) {
-    e.preventDefault()
+    // if (e.cancelable) {
+    //   e.preventDefault()
+    // }
 
     this.mouseDown = true
     this.mouseX = e.touches ? e.touches[0].pageX : e.clientX
@@ -78,21 +81,23 @@ class PanControls {
     this.mouseMoved = false
   }
 
-  onMouseUp (evt) {
-    evt.preventDefault()
+  onMouseUp (e) {
+    // if (e.cancelable) {
+    //   e.preventDefault()
+    // }
     this.mouseDown = false
     if (!this.mouseMoved && this.cbClick) this.cbClick(this.mouse)
   }
 
   addMouseHandler () {
-    this.container.addEventListener('mousemove', (e) => this.onMouseMove(e), false)
-    this.container.addEventListener('touchmove', (e) => this.onMouseMove(e), false)
+    this.container.addEventListener('mousemove', (e) => this.onMouseMove(e), { passive: false })
+    this.container.addEventListener('touchmove', (e) => this.onMouseMove(e), { passive: false })
 
-    this.container.addEventListener('mousedown', (e) => this.onMouseDown(e), false)
-    this.container.addEventListener('touchstart', (e) => this.onMouseDown(e), false)
+    this.container.addEventListener('mousedown', (e) => this.onMouseDown(e), { passive: false })
+    this.container.addEventListener('touchstart', (e) => this.onMouseDown(e), { passive: false })
 
-    this.container.addEventListener('mouseup', (e) => this.onMouseUp(e), false)
-    this.container.addEventListener('touchend', (e) => this.onMouseUp(e), false)
+    this.container.addEventListener('mouseup', (e) => this.onMouseUp(e), { passive: false })
+    this.container.addEventListener('touchend', (e) => this.onMouseUp(e), { passive: false })
   }
 
   init () {
