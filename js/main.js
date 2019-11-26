@@ -4,13 +4,16 @@
  * @author fagci / https://github.com/fagci https://mikhail-yudin.ru
  */
 
+const srcParamMatch = window.location.search.match(/src=([^&$]+)/)
 const isLightMode = !!window.location.search.match(/light_mode/)
-const qualityParamMatch = window.location.search.match(/quality=(\d+)/)
-const quality = qualityParamMatch ? qualityParamMatch[1] : 256 || 256
+const qualityParamMatch = window.location.search.match(/quality=([^&$]+)/)
+
+const src = srcParamMatch ? srcParamMatch[1] : 'example' || 'example'
+const quality = qualityParamMatch ? qualityParamMatch[1] : 1500 || 1500
 
 const ROOM_SIZE = 3.0 // Размер комнаты
-const SRC_PATH = '/res/br' + (+quality) + '/' // Папка с рендерами кубов
-const FILE_POINTS = '/res/point.txt' // Файл с точками и путями
+const SRC_PATH = '/res/' + src + '/br' + (+quality) + '/' // Папка с рендерами кубов
+const FILE_POINTS = '/res/' + src + '/point.txt' // Файл с точками и путями
 const FOV = 70 // Угол обзора камеры
 
 const CUBES_ROTATION = Math.PI / 2 // коррекция поворота кубов
