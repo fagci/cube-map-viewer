@@ -158,10 +158,10 @@ class Navigation {
     dstCube.material.transparent = false
 
     animateVector3(this.camera.position, dstCube.position, {
-      duration: 750,
-      easing: TWEEN.Easing.Cubic.InOut,
+      duration: 450,
+      easing: TWEEN.Easing.Quadratic.Out,
       update: (d) => {
-        srcCube.material.opacity = 1 - TWEEN.Easing.Cubic.In(d)
+        srcCube.material.opacity = 1 - TWEEN.Easing.Quadratic.Out(d)
         this.whereAmI.position.copy(this.camera.position)
       },
       callback: () => {
